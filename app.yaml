@@ -1,0 +1,7 @@
+kind: wasmer.io/App.v0
+name: real-estate-syria
+owner: gaaafar86
+package: .
+capabilities:
+  database:
+    engine: mysql
