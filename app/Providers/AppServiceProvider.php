@@ -2,43 +2,35 @@
 
 namespace App\Providers;
 
+use App\Models\Footer;
 use App\Models\Setting;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * تسجيل خدمات التطبيق.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * تشغيل خدمات التطبيق.
-     */
     public function boot(): void
     {
-        /*
-        |--------------------------------------------------------------------------
-        | لا تفحص قاعدة البيانات أثناء أوامر Artisan والبناء
-        |--------------------------------------------------------------------------
-        */
-        if (app()->runningInConsole()) {
-            return;
-        }
+        Paginator::useBootstrapFour();
 
-        try {
-            if (Schema::hasTable('settings')) {
-                view()->share(
-                    'setting',
-                    Setting::first()
-                );
+        View::composer('front.layouts.footer', function ($view) {
+            if (Schema::hasTable('footer')) {
+                $view->with(['footer' => Footer::first()]);
             }
-        } catch (\Throwable $e) {
-            // لا نوقف الموقع إذا لم تكن قاعدة البيانات جاهزة
+        });
+
+        if (
+            Schema::hasTable('settings') &&
+            Schema::hasColumn('settings', 'deleted_at')
+        ) {
+            View::share('setting', Setting::first());
         }
     }
 }
