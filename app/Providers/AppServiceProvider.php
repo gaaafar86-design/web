@@ -20,17 +20,35 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFour();
 
+        // لا تلمس قاعدة البيانات أثناء أوامر artisan (البناء، migrate، ...)
+        if ($this->app->runningInConsole()) {
+            return;
+        }
+
         View::composer('front.layouts.footer', function ($view) {
-            if (Schema::hasTable('footer')) {
-                $view->with(['footer' => Footer::first()]);
+            $footer = null;
+
+            try {
+                if (Schema::hasTable('footer')) {
+                    $footer = Footer::first();
+                }
+            } catch (\Throwable $e) {
+                // يكتب السبب الحقيقي في runtime logs
+                report($e);
             }
+
+            $view->with('footer', $footer);
         });
 
-        if (
-            Schema::hasTable('settings') &&
-            Schema::hasColumn('settings', 'deleted_at')
-        ) {
-            View::share('setting', Setting::first());
+        try {
+            if (
+                Schema::hasTable('settings') &&
+                Schema::hasColumn('settings', 'deleted_at')
+            ) {
+                View::share('setting', Setting::first());
+            }
+        } catch (\Throwable $e) {
+            report($e);
         }
     }
 }
